@@ -1,0 +1,90 @@
+---TASK I----
+create warehouse sd_assignment ;
+use warehouse sd_assignment;
+create database sd_fsda_assignment;
+use database sd_fsda_assignment;
+create or replace table shopping_history(
+        product varchar not null,
+        quantity int not null,
+        unit_price int not null
+);
+
+insert into shopping_history(product,quantity,unit_price)
+values ('milk',3,10),('bread',7,3),('bread',5,2),('milk',2,10),('bread',5,6),
+        ('egg',3,5),('egg',5,6),('butter',8,9),('bread',6,8),('chesse',9,10);
+
+select*from shopping_history;
+
+select product,sum(quantity*unit_price) as total_price 
+from shopping_history 
+group by 1
+order by 1 desc;
+
+-----TASK II ------
+
+Create or replace table phones(
+name varchar not null unique,
+phone_number int not null unique
+);
+
+create or replace table calls (
+id int not null,
+caller int not null,
+callee int not null,
+duration int not null,
+unique(id)
+);
+
+insert into phones(name,phone_number)
+values ('jack',1234),('lena',3333),('mark',9999),('anna',7582);
+
+select *from phones;
+
+insert into calls (id,caller,callee,duration)
+values (25,1234,7582,8),(7,9999,7582,1),
+(18,9999,3333,4),(2,7582,3333,3),
+(3,3333,1234,1),(21,3333,1234,1);
+
+select *from calls;
+
+with total_duration as (
+select caller as phone_number, sum(duration) as duration from calls group by caller
+union all
+select callee as phone_number, sum(duration) as duration from calls group by callee
+)
+SELECT name
+FROM phones p join total_duration t on t.phone_number = p.phone_number
+GROUP BY name
+HAVING SUM(duration) >= 10
+ORDER BY name;
+
+
+---- TASK 3------
+
+CREATE OR REPLACE TABLE transactions (
+Amount INTEGER NOT NULL,
+DATE DATE NOT NULL
+);
+
+INSERT INTO transactions (Amount, Date) VALUES (1000, '2020-01-06');
+INSERT INTO transactions (Amount, Date) VALUES (-10, '2020-01-14');
+INSERT INTO transactions (Amount, Date) VALUES (-75, '2020-01-20' );
+INSERT INTO transactions (Amount, Date) VALUES (-5, '2020-01-25');
+INSERT INTO transactions (Amount, Date) VALUES (-4, '2020-01-29' );
+INSERT INTO transactions (Amount, Date) VALUES (2000, '2020-03-10');
+INSERT INTO transactions (Amount, Date) VALUES (-75, '2020-03-12');
+INSERT INTO transactions (Amount, Date) VALUES (-20, '2020-03-15' );
+INSERT INTO transactions (Amount, Date) VALUES (40, '2020-03-15');
+INSERT INTO transactions (Amount, Date) VALUES (-50, '2020-03-17');
+INSERT INTO transactions (Amount, Date) VALUES (200, '2020-10-10');
+INSERT INTO transactions (Amount, Date) VALUES (-200, '2020-10-10');
+
+SELECT*FROM transactions;
+
+Select  (sum(a.whole_amount)) - ((12-(count(b.total_count)))*5)as total_amt_trans From  
+(select sum(amount) as whole_amount, date_part('month', date) as month from transactions group by month) as a left join
+(select count(amount) as total_count, date_part('month', date) as month 
+from transactions 
+where amount < 0 group by month
+having(total_count >3 or sum(amount) >-100) )as b
+on a.month=b.month;
